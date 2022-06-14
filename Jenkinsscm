@@ -1,0 +1,46 @@
+pipeline {
+environment { 
+
+        registry = "ajithaantony/hellogolang_12_june" 
+
+        registryCredential='Dockerhub_Cred'
+
+        dockerImage = '' 
+
+    }
+    agent any
+    
+
+    stages {
+        stage('CheckoutSCM') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [[$class: 'LocalBranch', localBranch: 'Golangbranch']], userRemoteConfigs: [[url: 'https://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@github.com/AjithaAntony/HelloGolang.git']]])
+            }
+        }
+        
+        stage("Build image") {
+            steps {
+                script {
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                }
+            }
+        }
+   
+      stage("Push image") {
+            steps {
+            	
+                script {
+                        docker.withRegistry( '', registryCredential ) { 
+                            dockerImage.push("latest")
+                            dockerImage.push("${env.BUILD_ID}")
+                    }
+                }
+            }
+            
+           }
+        
+
+    
+   
+  }  
+}
